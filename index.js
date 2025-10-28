@@ -15,6 +15,10 @@ app.use(cors()); // Enable CORS
 app.use(express.json()); // Enable parsing of JSON body payloads
 app.use(express.urlencoded({ extended: true })); // Enable parsing URL-encoded bodies
 
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 // ========== ROUTE REGISTRATION ==========
 // Attach the imageProcessorRouter to the base path '/api'
 app.use('/api', imageProcessorRouter);
