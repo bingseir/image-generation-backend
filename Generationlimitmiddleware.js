@@ -1,7 +1,7 @@
 import { isUserSubscribed } from './revenuecat.js';
 // Import one of these based on your choice:
 // import { getTodayGenerationCount, getRemainingGenerations } from './db-firebase.js';
-import { getTodayGenerationCount, getRemainingGenerations } from './db-mongodb.js';
+import { getTodayGenerationCount, getRemainingGenerations } from './db-firebase.js';
 
 const DAILY_LIMIT = 5;
 

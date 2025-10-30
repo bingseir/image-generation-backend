@@ -4,6 +4,8 @@ import { removeBackground } from '../bgremoval.js';
 import { generateImage } from '../textToImg.js'; 
 import { styleSingleImage, styleImage, generateImageSeedream } from '../styleImage.js';
 import { addTattoo } from '../addtattoo.js';
+import { checkGenerationLimit } from '../generationLimitMiddleware.js';
+import { incrementGenerationCount } from '../db-firebase.js';
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -34,10 +36,11 @@ router.post('/bg-removal', upload.single('image'), async (req, res, next) => {
     }
 });
 
-// ============ TEXT TO IMAGE ============
-router.post('/generate-image', async (req, res, next) => {
+// ============ TEXT TO IMAGE (WITH LIMIT CHECK) ============
+router.post('/generate-image', checkGenerationLimit, async (req, res, next) => {
     try {
-        const input = req.body; 
+        const input = req.body;
+        const userId = req.body.userId;
 
         if (!input || !input.prompt) {
             return res.status(400).json({ 
@@ -46,7 +49,18 @@ router.post('/generate-image', async (req, res, next) => {
         }
         
         const imageUrl = await generateImage(input);
-        res.json({ success: true, imageUrl });
+
+        // Record generation for free users after successful creation
+        if (!req.isSubscribed && userId) {
+            await incrementGenerationCount(userId);
+        }
+
+        res.json({ 
+            success: true, 
+            imageUrl,
+            remaining: req.remaining,
+            isSubscribed: req.isSubscribed
+        });
 
     } catch (error) {
         next(error); // Pass to global error handler

@@ -5,29 +5,23 @@ import admin from 'firebase-admin';
 import imageProcessorRouter from './routes/imageProcessor.js';
 import { errorHandler } from './errorHandling.js';
 
-// Load environment variables from .env file
+// Load environment variables FIRST
 dotenv.config();
 
 console.log('Initializing Firebase...');
 
-// Get Firebase credentials from environment variables
+// Initialize Firebase Admin SDK BEFORE importing other modules
 const serviceAccount = {
   projectId: process.env.FIREBASE_PROJECT_ID,
   clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
   privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
 };
 
-// Validate credentials
 if (!serviceAccount.projectId || !serviceAccount.clientEmail || !serviceAccount.privateKey) {
   console.error('❌ Firebase credentials not found!');
-  console.error('Make sure your .env file has:');
-  console.error('  - FIREBASE_PROJECT_ID');
-  console.error('  - FIREBASE_CLIENT_EMAIL');
-  console.error('  - FIREBASE_PRIVATE_KEY');
   process.exit(1);
 }
 
-// Initialize Firebase
 try {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -37,6 +31,7 @@ try {
   console.error('❌ Firebase initialization failed:', error.message);
   process.exit(1);
 }
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
