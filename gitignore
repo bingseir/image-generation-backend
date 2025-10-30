@@ -1,2 +1,4 @@
 .env
 .npmrc
+.env.local
+node_modules/
