@@ -5,7 +5,8 @@ import { generateImage } from '../textToImg.js';
 import { styleSingleImage, styleImage, generateImageSeedream } from '../styleImage.js';
 import { addTattoo } from '../addtattoo.js';
 import { checkGenerationLimit } from '../generationLimitMiddleware.js';
-import { incrementGenerationCount } from '../db-firebase.js';
+import { incrementGenerationCount, getTodayGenerationCount } from '../db-firebase.js';
+import { isUserSubscribed } from '../revenuecat.js';  // ← ADD THIS TOO
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
