@@ -224,8 +224,8 @@ router.post('/generateImage', checkGenerationLimit, upload.fields([
     { name: 'image2', maxCount: 1 }
 ]), async (req, res, next) => {
     try {
-        const { prompt } = req.body;
-        const userId = req.body.userId;
+        const { prompt, userId } = req.body;
+        console.log('📝 Route received - userId:', userId, 'prompt:', prompt);
         const image1File = req.files?.image1?.[0];
         const image2File = req.files?.image2?.[0];
 
