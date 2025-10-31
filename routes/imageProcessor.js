@@ -15,6 +15,8 @@ const bufferToBase64 = (buffer, mimeType) =>
     `data:${mimeType};base64,${buffer.toString('base64')}`;
 
 // ============ BACKGROUND REMOVAL ============
+// NOTE: Background removal typically doesn't count toward generation limits
+// since it's a preprocessing step, not a generation. Uncomment if needed.
 router.post('/bg-removal', upload.single('image'), async (req, res, next) => {
     try {
         const fileBuffer = req.file?.buffer;
@@ -68,10 +70,11 @@ router.post('/generate-image', checkGenerationLimit, async (req, res, next) => {
 });
 
 // ============ STYLE IMAGE - SINGLE ============
-router.post('/styleImage/single', upload.single('image'), async (req, res, next) => {
+router.post('/styleImage/single', checkGenerationLimit, upload.single('image'), async (req, res, next) => {
     try {
         const imageFile = req.file;
         const styleString = req.body.style;
+        const userId = req.body.userId;
 
         if (!imageFile) {
             return res.status(400).json({ 
@@ -88,7 +91,17 @@ router.post('/styleImage/single', upload.single('image'), async (req, res, next)
         const imageBase64 = bufferToBase64(imageFile.buffer, imageFile.mimetype);
         const imageUrl = await styleSingleImage(imageBase64, styleString);
 
-        res.json({ success: true, imageUrl });
+        // Record generation for free users after successful creation
+        if (!req.isSubscribed && userId) {
+            await incrementGenerationCount(userId);
+        }
+
+        res.json({ 
+            success: true, 
+            imageUrl,
+            remaining: req.remaining,
+            isSubscribed: req.isSubscribed
+        });
 
     } catch (error) {
         next(error); // Pass to global error handler
@@ -96,7 +109,7 @@ router.post('/styleImage/single', upload.single('image'), async (req, res, next)
 });
 
 // ============ STYLE IMAGE - DUAL ============
-router.post('/styleImage', upload.fields([
+router.post('/styleImage', checkGenerationLimit, upload.fields([
     { name: 'image1', maxCount: 1 },
     { name: 'image2', maxCount: 1 }
 ]), async (req, res, next) => {
@@ -104,6 +117,7 @@ router.post('/styleImage', upload.fields([
         const image1File = req.files?.image1?.[0];
         const image2File = req.files?.image2?.[0];
         const styleString = req.body.style;
+        const userId = req.body.userId;
 
         if (!image1File) {
             return res.status(400).json({ 
@@ -129,7 +143,18 @@ router.post('/styleImage', upload.fields([
         }
 
         const imageUrl = await styleImage(imageInputArray, styleString);
-        res.json({ success: true, imageUrl });
+
+        // Record generation for free users after successful creation
+        if (!req.isSubscribed && userId) {
+            await incrementGenerationCount(userId);
+        }
+
+        res.json({ 
+            success: true, 
+            imageUrl,
+            remaining: req.remaining,
+            isSubscribed: req.isSubscribed
+        });
 
     } catch (error) {
         next(error); // Pass to global error handler
@@ -138,6 +163,7 @@ router.post('/styleImage', upload.fields([
 
 // ============ ADD TATTOO ============
 router.post('/add-Tattoo', 
+    checkGenerationLimit,
     upload.fields([
         { name: 'resizedImage', maxCount: 1 },
         { name: 'originalPhoto', maxCount: 1 }
@@ -145,6 +171,7 @@ router.post('/add-Tattoo',
     async (req, res, next) => {
         try {
             const prompt = req.body.prompt;
+            const userId = req.body.userId;
             const resizedImageFile = req.files?.resizedImage?.[0];
             const originalPhotoFile = req.files?.originalPhoto?.[0];
 
@@ -172,7 +199,18 @@ router.post('/add-Tattoo',
             );
 
             const imageUrl = await addTattoo(prompt, originalPhotoBase64, resizedImageBase64);
-            res.json({ success: true, imageUrl });
+
+            // Record generation for free users after successful creation
+            if (!req.isSubscribed && userId) {
+                await incrementGenerationCount(userId);
+            }
+
+            res.json({ 
+                success: true, 
+                imageUrl,
+                remaining: req.remaining,
+                isSubscribed: req.isSubscribed
+            });
 
         } catch (error) {
             next(error); // Pass to global error handler
@@ -181,12 +219,13 @@ router.post('/add-Tattoo',
 );
 
 // ============ GENERATE IMAGE (BACK IN TIME) ============
-router.post('/generateImage', upload.fields([
+router.post('/generateImage', checkGenerationLimit, upload.fields([
     { name: 'image1', maxCount: 1 },
     { name: 'image2', maxCount: 1 }
 ]), async (req, res, next) => {
     try {
         const { prompt } = req.body;
+        const userId = req.body.userId;
         const image1File = req.files?.image1?.[0];
         const image2File = req.files?.image2?.[0];
 
@@ -211,7 +250,18 @@ router.post('/generateImage', upload.fields([
         }
 
         const imageUrl = await generateImageSeedream(prompt, imageInputArray);
-        res.json({ success: true, imageUrl });
+
+        // Record generation for free users after successful creation
+        if (!req.isSubscribed && userId) {
+            await incrementGenerationCount(userId);
+        }
+
+        res.json({ 
+            success: true, 
+            imageUrl,
+            remaining: req.remaining,
+            isSubscribed: req.isSubscribed
+        });
 
     } catch (error) {
         next(error); // Pass to global error handler
