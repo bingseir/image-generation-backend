@@ -34,7 +34,7 @@ export const checkGenerationLimit = async (req, res, next) => {
     if (generationCount >= DAILY_LIMIT) {
       return res.status(429).json({
         error: 'Daily generation limit reached',
-        message: `You have reached your daily limit of ${DAILY_LIMIT} generations. Upgrade to unlimited!`,
+        message: `You have reached your daily limit of ${DAILY_LIMIT} generations. Upgrade to Pro!`,
         remaining: 0,
       });
     }
