@@ -11,6 +11,7 @@ export const getTodayGenerationCount = async (userId) => {
     const userDoc = await userRef.get();
 
     console.log('📄 Document exists:', userDoc.exists);
+    console.log('📄 Document data:', userDoc.data()); // ← ADD THIS
 
     if (!userDoc.exists) {
       console.log('✅ No record found, returning 0');
@@ -20,9 +21,10 @@ export const getTodayGenerationCount = async (userId) => {
     const data = userDoc.data();
     const today = new Date().toDateString();
 
-    console.log('📅 Today:', today, 'Stored date:', data.generationDate);
+    console.log('📅 Today:', today, 'Stored date:', data?.generationDate);
+    console.log('📈 generationCount value:', data?.generationCount); // ← ADD THIS
 
-    if (data.generationDate !== today) {
+    if (data?.generationDate !== today) {
       console.log('🔄 Date mismatch, resetting count');
       await userRef.update({
         generationCount: 0,
@@ -32,8 +34,9 @@ export const getTodayGenerationCount = async (userId) => {
       return 0;
     }
 
-    console.log('📈 Current count:', data.generationCount);
-    return data.generationCount || 0;
+    const count = data?.generationCount || 0;
+    console.log('📈 Returning count:', count); // ← ADD THIS
+    return count;
   } catch (error) {
     console.error('❌ Error getting generation count:', error);
     return 0;
