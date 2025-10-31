@@ -275,4 +275,58 @@ router.post('/generateImage', upload.fields([
     }
 });
 
+// ============ GET GENERATION LIMIT ============
+router.get('/generation-limit/:userId', async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+
+        if (!userId) {
+            return res.status(400).json({
+                error: 'userId is required'
+            });
+        }
+
+        console.log('🔍 Fetching limit for userId:', userId);
+
+        // Check subscription
+        let isSubscribed = false;
+        try {
+            isSubscribed = await isUserSubscribed(userId);
+        } catch (error) {
+            console.warn('Could not verify subscription:', error.message);
+        }
+
+        // If subscribed, unlimited
+        if (isSubscribed) {
+            console.log('✅ User is subscribed - unlimited');
+            return res.json({
+                remaining: Infinity,
+                used: 0,
+                total: Infinity,
+                isSubscribed: true
+            });
+        }
+
+        // Get count for free users
+        const count = await getTodayGenerationCount(userId);
+        const DAILY_LIMIT = 5;
+
+        console.log(`📊 Count: ${count}/${DAILY_LIMIT}`);
+
+        res.json({
+            remaining: Math.max(0, DAILY_LIMIT - count),
+            used: count,
+            total: DAILY_LIMIT,
+            isSubscribed: false
+        });
+
+    } catch (error) {
+        console.error('❌ Error getting generation limit:', error);
+        res.status(500).json({
+            error: 'Failed to get generation limit',
+            message: error.message
+        });
+    }
+});
+
 export default router;
