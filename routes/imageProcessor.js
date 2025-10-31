@@ -70,7 +70,7 @@ router.post('/generate-image', checkGenerationLimit, async (req, res, next) => {
 });
 
 // ============ STYLE IMAGE - SINGLE ============
-router.post('/styleImage/single', checkGenerationLimit, upload.single('image'), async (req, res, next) => {
+router.post('/styleImage/single', upload.single('image'), checkGenerationLimit, async (req, res, next) => {
     try {
         const imageFile = req.file;
         const styleString = req.body.style;
@@ -109,10 +109,12 @@ router.post('/styleImage/single', checkGenerationLimit, upload.single('image'), 
 });
 
 // ============ STYLE IMAGE - DUAL ============
-router.post('/styleImage', checkGenerationLimit, upload.fields([
+router.post('/styleImage', upload.fields([
     { name: 'image1', maxCount: 1 },
     { name: 'image2', maxCount: 1 }
-]), async (req, res, next) => {
+]), 
+    checkGenerationLimit,
+async (req, res, next) => {
     try {
         const image1File = req.files?.image1?.[0];
         const image2File = req.files?.image2?.[0];
@@ -163,11 +165,13 @@ router.post('/styleImage', checkGenerationLimit, upload.fields([
 
 // ============ ADD TATTOO ============
 router.post('/add-Tattoo', 
-    checkGenerationLimit,
     upload.fields([
         { name: 'resizedImage', maxCount: 1 },
         { name: 'originalPhoto', maxCount: 1 }
-    ]), 
+    ]),     
+    
+    checkGenerationLimit,
+
     async (req, res, next) => {
         try {
             const prompt = req.body.prompt;
@@ -219,11 +223,14 @@ router.post('/add-Tattoo',
 );
 
 // ============ GENERATE IMAGE (BACK IN TIME) ============
-router.post('/generateImage', checkGenerationLimit, upload.fields([
+router.post('/generateImage', upload.fields([
     { name: 'image1', maxCount: 1 },
     { name: 'image2', maxCount: 1 }
-]), async (req, res, next) => {
-    try {
+        ]),
+    checkGenerationLimit,
+
+    async (req, res, next) => {
+        try {
         const { prompt, userId } = req.body;
         console.log('📝 Route received - userId:', userId, 'prompt:', prompt);
         const image1File = req.files?.image1?.[0];
